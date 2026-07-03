@@ -38,7 +38,7 @@ export class ChatService {
 
   private get defaultModel(): string {
     return (
-      this.configService.get<string>('app.ai.defaultModel') ?? 'gemini-2.0-flash'
+      this.configService.get<string>('app.ai.defaultModel') ?? 'gemini-1.5-flash'
     );
   }
 
