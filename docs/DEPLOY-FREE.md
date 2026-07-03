@@ -86,11 +86,13 @@ Skip this step if you only need chat without document uploads.
    - **Start command:** `npm run start:prod`
    - **Plan:** Free
 
-5. Add environment variables in Render dashboard:
+5. Add environment variables in Render dashboard **before deploying**:
+
+> **Important:** Add `DATABASE_URL` (Neon connection string) in **Environment** tab first. Without it, the app will fail at startup when running migrations.
 
 | Key | Value |
 |-----|-------|
-| `DATABASE_URL` | Neon connection string |
+| `DATABASE_URL` | Neon connection string (`postgresql://...?sslmode=require`) |
 | `REDIS_URL` | Upstash Redis URL |
 | `JWT_SECRET` | Random string (use https://generate-secret.vercel.app/32) |
 | `JWT_REFRESH_SECRET` | Another random string |
@@ -181,6 +183,7 @@ In Settings, select **GEMINI** provider and model `gemini-2.0-flash`.
 
 | Problem | Fix |
 |---------|-----|
+| Build fails: `Missing required environment variable: DATABASE_URL` | Pull latest code (Dockerfile fix), or set `DATABASE_URL` in Render Environment |
 | Registration fails | Check Render logs; verify `DATABASE_URL` in Render env |
 | CORS error | Set `FRONTEND_URL` + `CORS_ORIGINS` to exact Vercel URL |
 | Slow first load | Render free tier sleeps — wait 30s on first request |
