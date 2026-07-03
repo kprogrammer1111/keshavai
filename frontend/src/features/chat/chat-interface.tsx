@@ -144,8 +144,8 @@ export function ChatInterface() {
           content,
           provider: selectedProvider,
           model: selectedModel,
-          useRag: true,
-          useTools: true,
+          useRag: false,
+          useTools: false,
         }),
         signal: abortRef.current.signal,
       });

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service';
 import { AIService } from '../ai/ai.service';
 import { ChatMessage } from '../ai/interfaces/ai-provider.interface';
@@ -14,6 +15,7 @@ export class MemoryService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly aiService: AIService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -93,7 +95,10 @@ export class MemoryService {
     if (!chat?.provider) return;
 
     const result = await this.aiService.complete(chat.userId, chat.provider, {
-      model: chat.model ?? 'gpt-4o-mini',
+      model:
+        chat.model ??
+        this.configService.get<string>('app.ai.defaultModel') ??
+        'gemini-2.0-flash',
       messages: [
         {
           role: 'system',

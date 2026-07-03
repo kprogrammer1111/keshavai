@@ -142,8 +142,8 @@ export class ChatService {
     const chat = await this.prisma.chat.findUnique({ where: { id: chatId } });
     if (!chat) throw new NotFoundException('Chat not found');
 
-    const provider = dto.provider ?? chat.provider ?? this.defaultProvider;
-    const model = dto.model ?? chat.model ?? this.defaultModel;
+    const provider = dto.provider ?? this.defaultProvider;
+    const model = dto.model ?? this.defaultModel;
 
     await this.prisma.message.create({
       data: {
