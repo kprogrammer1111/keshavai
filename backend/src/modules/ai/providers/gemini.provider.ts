@@ -15,7 +15,11 @@ import {
 @Injectable()
 export class GeminiProvider implements AIProvider {
   readonly name = Provider.GEMINI;
-  readonly models = ['gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'];
+  readonly models = [
+    'gemini-2.5-flash',
+    'gemini-3.5-flash',
+    'gemini-2.5-pro',
+  ];
 
   private readonly genAI: GoogleGenerativeAI;
 
@@ -60,7 +64,7 @@ export class GeminiProvider implements AIProvider {
 
   async embed(text: string): Promise<number[]> {
     const model = this.genAI.getGenerativeModel({
-      model: 'text-embedding-004',
+      model: 'gemini-embedding-001',
     });
     const result = await model.embedContent(text);
     return result.embedding.values;

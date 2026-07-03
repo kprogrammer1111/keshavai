@@ -98,7 +98,7 @@ export class MemoryService {
       model:
         chat.model ??
         this.configService.get<string>('app.ai.defaultModel') ??
-        'gemini-1.5-flash',
+        'gemini-2.5-flash',
       messages: [
         {
           role: 'system',

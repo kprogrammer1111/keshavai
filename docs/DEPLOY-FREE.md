@@ -143,7 +143,7 @@ Or use Neon's SQL editor after first deploy if needed.
 
 ---
 
-## Step 8 — Test your live app
+## Step 8 — Test your live apps
 
 1. Open `https://YOUR-APP.vercel.app`
 2. Register a new account
@@ -161,7 +161,7 @@ API docs: `https://keshavai-api.onrender.com/api/docs`
 | **DeepSeek** | Free credits at https://platform.deepseek.com |
 | **Ollama** | Run locally, expose via ngrok (dev only) |
 
-In Settings, select **GEMINI** provider and model `gemini-2.0-flash`.
+In Settings, select **GEMINI** provider and model `gemini-2.5-flash`.
 
 ---
 

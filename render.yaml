@@ -29,7 +29,7 @@ services:
       - key: AI_DEFAULT_PROVIDER
         value: GEMINI
       - key: AI_DEFAULT_MODEL
-        value: gemini-1.5-flash
+        value: gemini-2.5-flash
       - key: S3_ENDPOINT
         sync: false
       - key: S3_ACCESS_KEY

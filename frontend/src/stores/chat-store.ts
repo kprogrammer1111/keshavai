@@ -43,7 +43,7 @@ export const useChatStore = create<ChatState>((set) => ({
   isStreaming: false,
   streamingContent: '',
   selectedProvider: 'GEMINI',
-  selectedModel: 'gemini-1.5-flash',
+  selectedModel: 'gemini-2.5-flash',
   setChats: (chats) => set({ chats }),
   setActiveChat: (id) => set({ activeChatId: id, streamingContent: '' }),
   addChat: (chat) => set((s) => ({ chats: [chat, ...s.chats] })),
