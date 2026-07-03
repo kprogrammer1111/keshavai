@@ -1,0 +1,267 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector", schema: "public")]
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+  TOOL
+}
+
+enum Provider {
+  OPENAI
+  ANTHROPIC
+  GEMINI
+  DEEPSEEK
+  OLLAMA
+  CUSTOM
+}
+
+enum DocumentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum SubscriptionPlan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  passwordHash      String?   @map("password_hash")
+  name              String?
+  avatar            String?
+  role              Role      @default(USER)
+  emailVerified     Boolean   @default(false) @map("email_verified")
+  emailVerifyToken  String?   @map("email_verify_token")
+  resetToken        String?   @map("reset_token")
+  resetTokenExpiry  DateTime? @map("reset_token_expiry")
+  oauthProvider     String?   @map("oauth_provider")
+  oauthId           String?   @map("oauth_id")
+  preferredModel    String?   @map("preferred_model")
+  preferredProvider Provider? @map("preferred_provider")
+  theme             String    @default("system")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  sessions      Session[]
+  chats         Chat[]
+  documents     Document[]
+  apiKeys       ApiKey[]
+  usage         Usage[]
+  subscription  Subscription?
+  auditLogs     AuditLog[]
+  prompts       Prompt[]
+
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  refreshToken String   @unique @map("refresh_token")
+  userAgent    String?  @map("user_agent")
+  ipAddress    String?  @map("ip_address")
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Chat {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String   @default("New Chat")
+  isPinned  Boolean  @default(false) @map("is_pinned")
+  model     String?
+  provider  Provider?
+  summary   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([userId, updatedAt])
+  @@index([userId, isPinned])
+  @@map("chats")
+}
+
+model Message {
+  id           String      @id @default(uuid())
+  chatId       String      @map("chat_id")
+  role         MessageRole
+  content      String
+  model        String?
+  provider     Provider?
+  tokenCount   Int?        @map("token_count")
+  toolCalls    Json?       @map("tool_calls")
+  toolCallId   String?     @map("tool_call_id")
+  metadata     Json?
+  isEdited     Boolean     @default(false) @map("is_edited")
+  parentId     String?     @map("parent_id")
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  chat        Chat         @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  attachments Attachment[]
+
+  @@index([chatId, createdAt])
+  @@map("messages")
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  messageId String   @map("message_id")
+  fileName  String   @map("file_name")
+  fileType  String   @map("file_type")
+  fileSize  Int      @map("file_size")
+  s3Key     String   @map("s3_key")
+  url       String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+model Document {
+  id        String         @id @default(uuid())
+  userId    String         @map("user_id")
+  fileName  String         @map("file_name")
+  fileType  String         @map("file_type")
+  fileSize  Int            @map("file_size")
+  s3Key     String         @map("s3_key")
+  status    DocumentStatus @default(PENDING)
+  chunkCount Int           @default(0) @map("chunk_count")
+  metadata  Json?
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  embeddings Embedding[]
+
+  @@index([userId])
+  @@map("documents")
+}
+
+model Embedding {
+  id         String                       @id @default(uuid())
+  documentId String                       @map("document_id")
+  content    String
+  chunkIndex Int                          @map("chunk_index")
+  vector     Unsupported("vector(1536)")?
+  metadata   Json?
+  createdAt  DateTime                     @default(now()) @map("created_at")
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@map("embeddings")
+}
+
+model Prompt {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String
+  content   String
+  isPublic  Boolean  @default(false) @map("is_public")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("prompts")
+}
+
+model ApiKey {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  name      String
+  keyHash   String    @map("key_hash")
+  lastUsed  DateTime? @map("last_used")
+  expiresAt DateTime? @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_keys")
+}
+
+model Tool {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String
+  schema      Json
+  isEnabled   Boolean  @default(true) @map("is_enabled")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("tools")
+}
+
+model Usage {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  provider         Provider
+  model            String
+  promptTokens     Int      @default(0) @map("prompt_tokens")
+  completionTokens Int      @default(0) @map("completion_tokens")
+  totalTokens      Int      @default(0) @map("total_tokens")
+  cost             Float    @default(0)
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("usage")
+}
+
+model Subscription {
+  id        String           @id @default(uuid())
+  userId    String           @unique @map("user_id")
+  plan      SubscriptionPlan @default(FREE)
+  stripeId  String?          @map("stripe_id")
+  expiresAt DateTime?        @map("expires_at")
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  action    String
+  resource  String?
+  details   Json?
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@map("audit_logs")
+}

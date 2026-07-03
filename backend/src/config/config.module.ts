@@ -1,0 +1,18 @@
+import { Module, Global } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import configuration from './configuration';
+
+/**
+ * Global configuration module loading environment variables.
+ */
+@Global()
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [configuration],
+      envFilePath: ['.env'],
+    }),
+  ],
+})
+export class AppConfigModule {}
