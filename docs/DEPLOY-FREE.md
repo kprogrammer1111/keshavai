@@ -208,7 +208,24 @@ Then redeploy on Render.
 
 ---
 
-## Optional: custom domain
+## Optional: custom domain (e.g. heykeshav.com)
 
-- **Vercel:** Project Settings → Domains → add your domain (free)
-- **Render:** Settings → Custom Domain (free)
+### Vercel (frontend)
+
+1. Project **Settings → Domains** → add `heykeshav.com` and `www.heykeshav.com`
+2. Confirm `NEXT_PUBLIC_API_URL` is set to your Render backend, e.g. `https://keshavai-chq6.onrender.com/api/v1` (same for all domains on this project)
+3. Redeploy after any env change
+
+### Render (backend CORS)
+
+Add or update these in **Environment**:
+
+| Key | Value |
+|-----|-------|
+| `FRONTEND_URL` | `https://www.heykeshav.com` |
+| `CORS_ORIGINS` | `https://keshavai-beryl.vercel.app,https://www.heykeshav.com,https://heykeshav.com` |
+| `CORS_ALLOWED_HOSTS` | `heykeshav.com` |
+
+Redeploy the backend. Both `keshavai-beryl.vercel.app` and `heykeshav.com` will work.
+
+> **Login error “Cannot reach server on port 3001”?** The browser blocked the API call (usually CORS). Add the custom domain to `CORS_ORIGINS` / `CORS_ALLOWED_HOSTS` on Render.

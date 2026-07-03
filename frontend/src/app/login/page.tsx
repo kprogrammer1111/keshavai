@@ -28,7 +28,8 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? 'Cannot reach server. Is the backend running on port 3001?';
+          ?.message ??
+          'Cannot reach API server. Check NEXT_PUBLIC_API_URL on Vercel and CORS settings on Render.';
       toast.error(message);
     } finally {
       setLoading(false);

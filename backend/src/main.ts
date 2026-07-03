@@ -17,21 +17,37 @@ async function bootstrap() {
 
   app.use(helmet());
   app.use(compression());
+  const corsOrigins =
+    process.env.CORS_ORIGINS?.split(',').map((o) => o.trim()) ?? [];
+  const corsAllowedHosts =
+    process.env.CORS_ALLOWED_HOSTS?.split(',').map((h) => h.trim()) ?? [];
+
+  const isAllowedOrigin = (origin: string | undefined): boolean => {
+    if (!origin) return true;
+
+    const allowed = [frontendUrl, ...corsOrigins].filter(Boolean);
+    if (allowed.includes(origin)) return true;
+    if (/\.vercel\.app$/.test(origin)) return true;
+
+    try {
+      const { hostname } = new URL(origin);
+      return corsAllowedHosts.some(
+        (host) =>
+          hostname === host ||
+          hostname === `www.${host}` ||
+          hostname.endsWith(`.${host}`),
+      );
+    } catch {
+      return false;
+    }
+  };
+
   app.enableCors({
     origin: (
       origin: string | undefined,
       callback: (err: Error | null, allow?: boolean) => void,
     ) => {
-      const allowed = [
-        frontendUrl,
-        ...(process.env.CORS_ORIGINS?.split(',').map((o) => o.trim()) ?? []),
-      ].filter(Boolean);
-
-      if (
-        !origin ||
-        allowed.includes(origin) ||
-        /\.vercel\.app$/.test(origin)
-      ) {
+      if (isAllowedOrigin(origin)) {
         callback(null, true);
       } else {
         callback(new Error(`CORS blocked: ${origin}`));
