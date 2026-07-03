@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Provider } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { AIService } from '../ai/ai.service';
@@ -20,7 +21,13 @@ export class RagService {
     private readonly prisma: PrismaService,
     private readonly aiService: AIService,
     private readonly storage: StorageService,
+    private readonly configService: ConfigService,
   ) {}
+
+  private get embedProvider(): Provider {
+    return (this.configService.get<string>('app.ai.defaultProvider') ??
+      'GEMINI') as Provider;
+  }
 
   /**
    * Process an uploaded document: extract text, chunk, embed, store.
@@ -43,7 +50,10 @@ export class RagService {
       const chunks = this.chunkText(text);
 
       for (let i = 0; i < chunks.length; i++) {
-        const embedding = await this.aiService.embed(Provider.OPENAI, chunks[i]);
+        const embedding = await this.aiService.embed(
+          this.embedProvider,
+          chunks[i],
+        );
         const vectorStr = `[${embedding.join(',')}]`;
 
         await this.prisma.$executeRawUnsafe(
@@ -77,7 +87,7 @@ export class RagService {
     query: string,
     limit = 5,
   ): Promise<Array<{ content: string; score: number }>> {
-    const embedding = await this.aiService.embed(Provider.OPENAI, query);
+    const embedding = await this.aiService.embed(this.embedProvider, query);
     const vectorStr = `[${embedding.join(',')}]`;
 
     const results = await this.prisma.$queryRawUnsafe<

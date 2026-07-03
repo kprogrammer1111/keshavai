@@ -38,6 +38,8 @@ export default registerAs('app', () => ({
     ollama: {
       baseUrl: process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434',
     },
+    defaultProvider: process.env.AI_DEFAULT_PROVIDER ?? 'GEMINI',
+    defaultModel: process.env.AI_DEFAULT_MODEL ?? 'gemini-2.0-flash',
   },
   throttle: {
     ttl: parseInt(process.env.THROTTLE_TTL ?? '60', 10),

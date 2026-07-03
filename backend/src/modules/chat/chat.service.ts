@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Provider, MessageRole } from '@prisma/client';
 import type { Response } from 'express';
 import { PrismaService } from '../../database/prisma.service';
@@ -27,15 +28,27 @@ export class ChatService {
     private readonly memoryService: MemoryService,
     private readonly ragService: RagService,
     private readonly toolRegistry: ToolRegistry,
+    private readonly configService: ConfigService,
   ) {}
+
+  private get defaultProvider(): Provider {
+    return (this.configService.get<string>('app.ai.defaultProvider') ??
+      'GEMINI') as Provider;
+  }
+
+  private get defaultModel(): string {
+    return (
+      this.configService.get<string>('app.ai.defaultModel') ?? 'gemini-2.0-flash'
+    );
+  }
 
   async createChat(userId: string, dto: CreateChatDto) {
     return this.prisma.chat.create({
       data: {
         userId,
         title: dto.title ?? 'New Chat',
-        provider: dto.provider ?? Provider.OPENAI,
-        model: dto.model ?? 'gpt-4o-mini',
+        provider: dto.provider ?? this.defaultProvider,
+        model: dto.model ?? this.defaultModel,
       },
     });
   }
@@ -129,8 +142,8 @@ export class ChatService {
     const chat = await this.prisma.chat.findUnique({ where: { id: chatId } });
     if (!chat) throw new NotFoundException('Chat not found');
 
-    const provider = dto.provider ?? chat.provider ?? Provider.OPENAI;
-    const model = dto.model ?? chat.model ?? 'gpt-4o-mini';
+    const provider = dto.provider ?? chat.provider ?? this.defaultProvider;
+    const model = dto.model ?? chat.model ?? this.defaultModel;
 
     await this.prisma.message.create({
       data: {
@@ -150,10 +163,14 @@ export class ChatService {
 
     let systemPrompt = 'You are a helpful AI assistant.';
     if (dto.useRag) {
-      const chunks = await this.ragService.retrieve(userId, dto.content);
-      if (chunks.length > 0) {
-        const context = chunks.map((c) => c.content).join('\n\n');
-        systemPrompt += `\n\nRelevant context from documents:\n${context}`;
+      try {
+        const chunks = await this.ragService.retrieve(userId, dto.content);
+        if (chunks.length > 0) {
+          const context = chunks.map((c) => c.content).join('\n\n');
+          systemPrompt += `\n\nRelevant context from documents:\n${context}`;
+        }
+      } catch {
+        // Continue without RAG if embeddings or retrieval fail
       }
     }
 
