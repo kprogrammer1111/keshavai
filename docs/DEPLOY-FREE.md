@@ -184,11 +184,27 @@ In Settings, select **GEMINI** provider and model `gemini-2.0-flash`.
 | Problem | Fix |
 |---------|-----|
 | Build fails: `Missing required environment variable: DATABASE_URL` | Pull latest code (Dockerfile fix), or set `DATABASE_URL` in Render Environment |
+| Migration fails: `string contains embedded null` | Reset Neon DB (see below), push latest migration fix, redeploy |
+| `P3009` failed migrations | Reset Neon database in SQL Editor (see below) |
 | Registration fails | Check Render logs; verify `DATABASE_URL` in Render env |
 | CORS error | Set `FRONTEND_URL` + `CORS_ORIGINS` to exact Vercel URL |
 | Slow first load | Render free tier sleeps — wait 30s on first request |
 | Chat no response | Add `OPENAI_API_KEY` or `GEMINI_API_KEY` in Render env |
 | DB connection error | Ensure Neon URL includes `?sslmode=require` |
+
+### Reset Neon database (after failed migration)
+
+In **Neon → SQL Editor**, run:
+
+```sql
+DROP SCHEMA public CASCADE;
+CREATE SCHEMA public;
+CREATE EXTENSION IF NOT EXISTS vector;
+GRANT ALL ON SCHEMA public TO neondb_owner;
+GRANT ALL ON SCHEMA public TO public;
+```
+
+Then redeploy on Render.
 
 ---
 
