@@ -287,7 +287,6 @@ export function ChatInterface() {
           onSend={handleSend}
           onStop={handleStop}
           isStreaming={isStreaming}
-          streamingContent={streamingContent}
         />
       </main>
     </div>

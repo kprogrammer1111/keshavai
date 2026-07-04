@@ -1,48 +1,17 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { Send, Square, Paperclip } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Plus, Mic, Square, ArrowUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PromptBoxProps {
   onSend: (content: string) => void;
   onStop?: () => void;
   isStreaming?: boolean;
-  streamingContent?: string;
   disabled?: boolean;
 }
 
-function TypingIndicator({ hasContent }: { hasContent: boolean }) {
-  return (
-    <div className="mx-auto mb-2 flex max-w-3xl items-center gap-2 px-1">
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-white">
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-neutral-400 opacity-60" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-neutral-500" />
-        </span>
-      </div>
-      <div className="flex items-center gap-2 rounded-2xl rounded-bl-sm border border-[var(--border)] bg-[var(--hover)] px-3 py-2 shadow-sm">
-        <span className="text-sm text-[var(--muted)]">
-          {hasContent ? 'Generating response' : 'Keshavai is thinking'}
-        </span>
-        <span className="flex items-center gap-1" aria-hidden>
-          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-neutral-400 [animation-delay:0ms]" />
-          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-neutral-400 [animation-delay:150ms]" />
-          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-neutral-400 [animation-delay:300ms]" />
-        </span>
-      </div>
-    </div>
-  );
-}
-
-export function PromptBox({
-  onSend,
-  onStop,
-  isStreaming,
-  streamingContent,
-  disabled,
-}: PromptBoxProps) {
+export function PromptBox({ onSend, onStop, isStreaming, disabled }: PromptBoxProps) {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -70,53 +39,69 @@ export function PromptBox({
     el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
   };
 
+  const canSend = input.trim().length > 0 && !isStreaming && !disabled;
+
   return (
-    <div className="shrink-0 border-t border-[var(--border)] bg-white p-2 sm:p-4">
-      {isStreaming && (
-        <TypingIndicator hasContent={Boolean(streamingContent?.trim())} />
-      )}
-      <div className="mx-auto flex max-w-3xl items-end gap-1 rounded-2xl border border-[var(--border)] bg-white p-1.5 shadow-sm sm:gap-2 sm:p-2">
-        <Button variant="ghost" size="icon" className="shrink-0 text-[var(--muted)]">
-          <Paperclip className="h-4 w-4" />
-        </Button>
+    <div className="shrink-0 bg-white px-3 pb-4 pt-2 sm:px-4 sm:pb-6">
+      <div className="mx-auto max-w-3xl">
+        <div className="flex items-end gap-2 rounded-[28px] border border-[var(--border)] bg-white px-2 py-2 shadow-[0_2px_12px_rgba(0,0,0,0.06)] sm:px-3">
+          <button
+            type="button"
+            className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--muted)] transition-colors hover:bg-[var(--hover)] hover:text-[var(--foreground)]"
+            aria-label="Add attachment"
+          >
+            <Plus className="h-5 w-5" />
+          </button>
 
-        <textarea
-          ref={textareaRef}
-          value={input}
-          onChange={handleInput}
-          onKeyDown={handleKeyDown}
-          placeholder={isStreaming ? 'Waiting for response...' : 'Message Keshavai...'}
-          rows={1}
-          disabled={disabled || isStreaming}
-          className={cn(
-            'max-h-[200px] min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none',
-            disabled && 'opacity-50',
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={handleInput}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask anything"
+            rows={1}
+            disabled={disabled || isStreaming}
+            className={cn(
+              'max-h-[200px] min-h-[36px] flex-1 resize-none bg-transparent py-2 text-[15px] text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none',
+              (disabled || isStreaming) && 'opacity-60',
+            )}
+          />
+
+          <button
+            type="button"
+            className="mb-0.5 hidden h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--muted)] transition-colors hover:bg-[var(--hover)] hover:text-[var(--foreground)] sm:flex"
+            aria-label="Voice input"
+          >
+            <Mic className="h-5 w-5" />
+          </button>
+
+          {isStreaming ? (
+            <button
+              type="button"
+              onClick={onStop}
+              className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition-opacity hover:opacity-90"
+              aria-label="Stop generating"
+            >
+              <Square className="h-3.5 w-3.5 fill-current" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!canSend}
+              className={cn(
+                'mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors',
+                canSend
+                  ? 'bg-neutral-900 text-white hover:opacity-90'
+                  : 'bg-[var(--hover)] text-[var(--muted)]',
+              )}
+              aria-label="Send message"
+            >
+              <ArrowUp className="h-5 w-5" />
+            </button>
           )}
-        />
-
-        {isStreaming ? (
-          <Button
-            variant="destructive"
-            size="icon"
-            onClick={onStop}
-            className="shrink-0"
-          >
-            <Square className="h-4 w-4" />
-          </Button>
-        ) : (
-          <Button
-            size="icon"
-            onClick={handleSubmit}
-            disabled={!input.trim() || disabled}
-            className="shrink-0"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        )}
+        </div>
       </div>
-      <p className="mt-1 hidden text-center text-xs text-[var(--muted)] sm:mt-2 sm:block">
-        Keshavai can make mistakes. Verify important information.
-      </p>
     </div>
   );
 }

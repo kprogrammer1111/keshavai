@@ -1,82 +1,183 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import { Copy, Check, User, Bot } from 'lucide-react';
-import { useState } from 'react';
+import {
+  Copy,
+  Check,
+  ThumbsUp,
+  ThumbsDown,
+  Share2,
+  MoreHorizontal,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Message } from '@/stores/chat-store';
+
+function CodeBlock({
+  children,
+  className,
+}: {
+  children?: React.ReactNode;
+  className?: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  const text = String(children ?? '').replace(/\n$/, '');
+
+  const copyCode = async () => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (!className) {
+    return (
+      <code className="rounded bg-[var(--hover)] px-1.5 py-0.5 font-mono text-[0.9em]">
+        {children}
+      </code>
+    );
+  }
+
+  return (
+    <div className="group/code relative my-3 overflow-hidden rounded-xl bg-[var(--hover)]">
+      <button
+        type="button"
+        onClick={copyCode}
+        className="absolute right-2 top-2 rounded-md p-1.5 text-[var(--muted)] opacity-0 transition-opacity hover:bg-white hover:text-[var(--foreground)] group-hover/code:opacity-100"
+        aria-label="Copy code"
+      >
+        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+      </button>
+      <pre className="overflow-x-auto p-4 pt-10 font-mono text-sm leading-relaxed">
+        <code className={className}>{children}</code>
+      </pre>
+    </div>
+  );
+}
+
+function MessageActions({ content }: { content: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const copyContent = async () => {
+    await navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="mt-2 flex items-center gap-1">
+      <ActionButton
+        label={copied ? 'Copied' : 'Copy'}
+        onClick={copyContent}
+        icon={copied ? Check : Copy}
+      />
+      <ActionButton label="Good response" icon={ThumbsUp} />
+      <ActionButton label="Bad response" icon={ThumbsDown} />
+      <ActionButton label="Share" icon={Share2} />
+      <ActionButton label="More" icon={MoreHorizontal} />
+    </div>
+  );
+}
+
+function ActionButton({
+  label,
+  icon: Icon,
+  onClick,
+}: {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className="rounded-lg p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--hover)] hover:text-[var(--foreground)]"
+    >
+      <Icon className="h-4 w-4" />
+    </button>
+  );
+}
+
+function AssistantContent({
+  content,
+  isStreaming,
+}: {
+  content: string;
+  isStreaming?: boolean;
+}) {
+  return (
+    <div className="chat-prose text-[15px] leading-7 text-[var(--foreground)]">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeHighlight]}
+        components={{
+          pre: ({ children }) => <>{children}</>,
+          code: CodeBlock,
+          hr: () => <hr className="my-6 border-[var(--border)]" />,
+          h1: ({ children }) => (
+            <h1 className="mb-3 mt-6 text-2xl font-semibold first:mt-0">{children}</h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="mb-2 mt-5 text-xl font-semibold first:mt-0">{children}</h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="mb-2 mt-4 text-lg font-semibold first:mt-0">{children}</h3>
+          ),
+          p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+          ul: ({ children }) => (
+            <ul className="mb-3 list-disc space-y-1 pl-6 last:mb-0">{children}</ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="mb-3 list-decimal space-y-1 pl-6 last:mb-0">{children}</ol>
+          ),
+          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+      {isStreaming && (
+        <span className="ml-0.5 inline-block h-5 w-0.5 animate-pulse bg-neutral-800 align-middle" />
+      )}
+    </div>
+  );
+}
+
+function ThinkingDots() {
+  return (
+    <div className="flex items-center gap-1 py-2">
+      <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:0ms]" />
+      <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:150ms]" />
+      <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:300ms]" />
+    </div>
+  );
+}
 
 interface MessageBubbleProps {
   message: Message;
   isStreaming?: boolean;
 }
 
-export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
-  const [copied, setCopied] = useState(false);
+function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
   const isUser = message.role === 'USER';
 
-  const copyContent = async () => {
-    await navigator.clipboard.writeText(message.content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  if (isUser) {
+    return (
+      <div className="flex w-full justify-end px-4 py-3">
+        <div className="max-w-[85%] rounded-3xl bg-[var(--user-bubble)] px-4 py-2.5 text-[15px] leading-relaxed text-[var(--foreground)] sm:max-w-[70%]">
+          {message.content}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className={cn(
-        'group flex w-full px-3 py-1.5 sm:px-4',
-        isUser ? 'justify-end' : 'justify-start',
-      )}
-    >
-      <div
-        className={cn(
-          'flex max-w-[85%] items-end gap-2 sm:max-w-[75%]',
-          isUser ? 'flex-row-reverse' : 'flex-row',
-        )}
-      >
-        <div
-          className={cn(
-            'mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-white',
-            isUser ? 'order-2' : 'order-1',
-          )}
-        >
-          {isUser ? (
-            <User className="h-3.5 w-3.5 text-[var(--foreground)]" />
-          ) : (
-            <Bot className="h-3.5 w-3.5 text-[var(--foreground)]" />
-          )}
-        </div>
-
-        <div
-          className={cn(
-            'relative min-w-0 space-y-1 px-3 py-2 shadow-sm',
-            isUser
-              ? 'rounded-2xl rounded-br-sm bg-[var(--hover)] text-[var(--foreground)]'
-              : 'rounded-2xl rounded-bl-sm border border-[var(--border)] bg-white text-[var(--foreground)]',
-          )}
-        >
-          <div className="prose prose-sm max-w-none text-[var(--foreground)] prose-p:my-1 prose-pre:my-2 prose-pre:bg-white prose-pre:border prose-pre:border-[var(--border)] prose-ul:my-1 prose-ol:my-1">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-              {message.content}
-            </ReactMarkdown>
-            {isStreaming && (
-              <span className="inline-block h-4 w-1 animate-pulse bg-neutral-400" />
-            )}
-          </div>
-
-          {!isUser && !isStreaming && (
-            <button
-              onClick={copyContent}
-              className="flex items-center gap-1 text-xs text-[var(--muted)] opacity-0 transition-opacity group-hover:opacity-100 hover:text-[var(--foreground)]"
-            >
-              {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-              {copied ? 'Copied' : 'Copy'}
-            </button>
-          )}
-        </div>
+    <div className="group w-full px-4 py-4">
+      <div className="mx-auto max-w-3xl">
+        <AssistantContent content={message.content} isStreaming={isStreaming} />
+        {!isStreaming && message.content && <MessageActions content={message.content} />}
       </div>
     </div>
   );
@@ -112,16 +213,17 @@ export function MessageList({
     userScrolledUpRef.current = distanceFromBottom > 80;
   }, []);
 
-  // Load / switch chat — jump to latest
   useEffect(() => {
     userScrolledUpRef.current = false;
     requestAnimationFrame(() => scrollToBottom(true));
   }, [chatId, scrollToBottom]);
 
-  // New messages or streaming
   useEffect(() => {
     requestAnimationFrame(() => scrollToBottom(false));
   }, [messages, streamingContent, isStreaming, scrollToBottom]);
+
+  const showStreamingBubble = isStreaming && streamingContent;
+  const showThinking = isStreaming && !streamingContent;
 
   return (
     <div
@@ -129,16 +231,21 @@ export function MessageList({
       onScroll={handleScroll}
       className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-white"
     >
-      <div className="mx-auto w-full max-w-3xl space-y-1 py-3">
+      <div className="mx-auto w-full max-w-3xl pb-4 pt-2">
         {messages.length === 0 && !isStreaming && (
-          <p className="px-4 py-8 text-center text-sm text-[var(--muted)]">
-            Send a message to start the conversation
+          <p className="px-4 py-12 text-center text-sm text-[var(--muted)]">
+            Ask anything to get started
           </p>
         )}
         {messages.map((msg) => (
           <MessageBubble key={msg.id} message={msg} />
         ))}
-        {isStreaming && streamingContent && (
+        {showThinking && (
+          <div className="px-4 py-4">
+            <ThinkingDots />
+          </div>
+        )}
+        {showStreamingBubble && (
           <MessageBubble
             message={{
               id: 'streaming',

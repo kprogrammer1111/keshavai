@@ -84,4 +84,6 @@ MIT
 
 ## Deploy Online (Free)
 
-See **[docs/DEPLOY-FREE.md](docs/DEPLOY-FREE.md)** for step-by-step free deployment using Vercel + Render + Neon + Upstash.
+See **[docs/DEPLOY-FREE.md](docs/DEPLOY-FREE.md)** for Vercel + Render + Neon + Upstash.
+
+**Your own AI model online (no OpenAI, no local PC):** see **[docs/DEPLOY-OLLAMA-CLOUD.md](docs/DEPLOY-OLLAMA-CLOUD.md)** — Ollama on Oracle Cloud free VPS + Render.
