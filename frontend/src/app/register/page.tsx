@@ -41,8 +41,8 @@ export default function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center bg-white px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent)]">
-            <Sparkles className="h-6 w-6 text-white" />
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--border)] bg-white">
+            <Sparkles className="h-6 w-6 text-[var(--foreground)]" />
           </div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Create an account</h1>
           <p className="mt-2 text-[var(--muted)]">Get started with Keshavai</p>
@@ -76,7 +76,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-sm text-[var(--muted)]">
           Already have an account?{' '}
-          <Link href="/login" className="text-[var(--accent)] hover:underline">
+          <Link href="/login" className="text-[var(--foreground)] underline hover:opacity-80">
             Sign in
           </Link>
         </p>

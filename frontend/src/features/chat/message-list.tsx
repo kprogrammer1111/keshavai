@@ -28,36 +28,31 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
     <div
       className={cn(
         'group flex gap-4 px-4 py-6 md:px-8',
-        isUser ? 'bg-white' : 'bg-[var(--surface-muted)]',
+        'bg-white',
       )}
     >
-      <div
-        className={cn(
-          'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
-          isUser ? 'bg-[var(--accent)]' : 'bg-[var(--sidebar-bg)]',
-        )}
-      >
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-white">
         {isUser ? (
-          <User className="h-4 w-4 text-white" />
+          <User className="h-4 w-4 text-[var(--foreground)]" />
         ) : (
-          <Bot className="h-4 w-4 text-white" />
+          <Bot className="h-4 w-4 text-[var(--foreground)]" />
         )}
       </div>
 
       <div className="min-w-0 flex-1 space-y-2">
-        <div className="prose prose-sm max-w-none text-[var(--foreground)] prose-pre:bg-[#f3f0ff] prose-pre:border prose-pre:border-[var(--border)] prose-code:text-[var(--accent)]">
+        <div className="prose prose-sm max-w-none text-[var(--foreground)] prose-pre:bg-[var(--hover)] prose-pre:border prose-pre:border-[var(--border)] prose-code:text-[var(--foreground)]">
           <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
             {message.content}
           </ReactMarkdown>
           {isStreaming && (
-            <span className="inline-block h-4 w-1 animate-pulse bg-[var(--accent)]" />
+            <span className="inline-block h-4 w-1 animate-pulse bg-neutral-400" />
           )}
         </div>
 
         {!isUser && !isStreaming && (
           <button
             onClick={copyContent}
-            className="flex items-center gap-1 text-xs text-[var(--muted)] opacity-0 transition-opacity group-hover:opacity-100 hover:text-[var(--accent)]"
+            className="flex items-center gap-1 text-xs text-[var(--muted)] opacity-0 transition-opacity group-hover:opacity-100 hover:text-[var(--foreground)]"
           >
             {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
             {copied ? 'Copied' : 'Copy'}

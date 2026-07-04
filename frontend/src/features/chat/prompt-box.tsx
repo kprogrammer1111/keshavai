@@ -42,7 +42,7 @@ export function PromptBox({ onSend, onStop, isStreaming, disabled }: PromptBoxPr
 
   return (
     <div className="shrink-0 border-t border-[var(--border)] bg-white p-4">
-      <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-[var(--border)] bg-white p-2 shadow-md shadow-purple-100/50">
+      <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-[var(--border)] bg-white p-2 shadow-sm">
         <Button variant="ghost" size="icon" className="shrink-0 text-[var(--muted)]">
           <Paperclip className="h-4 w-4" />
         </Button>

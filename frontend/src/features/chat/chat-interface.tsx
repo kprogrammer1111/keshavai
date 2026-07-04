@@ -221,8 +221,8 @@ export function ChatInterface() {
       <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {!activeChatId ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-white">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--surface-muted)]">
-              <Sparkles className="h-8 w-8 text-[var(--accent)]" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--border)] bg-white">
+              <Sparkles className="h-8 w-8 text-[var(--foreground)]" />
             </div>
             <h2 className="text-2xl font-semibold text-[var(--foreground)]">
               How can I help you today?

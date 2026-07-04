@@ -12,7 +12,7 @@ import { useChatStore } from '@/stores/chat-store';
 import { toast } from 'sonner';
 
 const selectClass =
-  'w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]';
+  'w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-neutral-400';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -45,10 +45,10 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-white text-[var(--foreground)]">
-      <header className="border-b border-[var(--border)] bg-[var(--sidebar-bg)] px-6 py-4">
+      <header className="border-b border-[var(--border)] bg-white px-6 py-4">
         <Link
           href="/"
-          className="flex items-center gap-2 text-[var(--sidebar-muted)] hover:text-[var(--sidebar-fg)]"
+          className="flex items-center gap-2 text-[var(--muted)] hover:text-[var(--foreground)]"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to chat
@@ -58,7 +58,7 @@ export default function SettingsPage() {
       <div className="mx-auto max-w-2xl space-y-8 p-6">
         <section>
           <h2 className="mb-4 text-lg font-semibold">Profile</h2>
-          <div className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+          <div className="space-y-4 rounded-xl border border-[var(--border)] bg-white p-4">
             <div>
               <label className="mb-1 block text-sm text-[var(--muted)]">Name</label>
               <Input value={name} onChange={(e) => setName(e.target.value)} />
@@ -73,7 +73,7 @@ export default function SettingsPage() {
 
         <section>
           <h2 className="mb-4 text-lg font-semibold">AI Model</h2>
-          <div className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+          <div className="space-y-4 rounded-xl border border-[var(--border)] bg-white p-4">
             <div>
               <label className="mb-1 block text-sm text-[var(--muted)]">Provider</label>
               <select
@@ -113,8 +113,8 @@ export default function SettingsPage() {
 
         <section>
           <h2 className="mb-4 text-lg font-semibold">Usage</h2>
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
-            <p className="text-2xl font-bold text-[var(--accent)]">
+          <div className="rounded-xl border border-[var(--border)] bg-white p-4">
+            <p className="text-2xl font-bold text-[var(--foreground)]">
               {(usage?.totals?.totalTokens ?? 0).toLocaleString()}
             </p>
             <p className="text-sm text-[var(--muted)]">Total tokens used</p>
