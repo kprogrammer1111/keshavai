@@ -44,7 +44,7 @@ export function Sidebar({
   const regularChats = chats.filter((c) => !c.isPinned);
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r border-[var(--sidebar-border)] bg-[var(--sidebar-bg)]">
+    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-[var(--sidebar-border)] bg-[var(--sidebar-bg)]">
       <div className="flex items-center justify-between p-4">
         <h1 className="text-lg font-semibold text-[var(--sidebar-fg)]">Keshavai</h1>
         <Button

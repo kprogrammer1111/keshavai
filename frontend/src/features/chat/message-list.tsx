@@ -69,55 +69,71 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
 }
 
 interface MessageListProps {
+  chatId: string;
   messages: Message[];
   streamingContent?: string;
   isStreaming?: boolean;
 }
 
-const SCROLL_THRESHOLD = 100;
+const SCROLL_THRESHOLD = 80;
 
-export function MessageList({ messages, streamingContent, isStreaming }: MessageListProps) {
+export function MessageList({
+  chatId,
+  messages,
+  streamingContent,
+  isStreaming,
+}: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
-  const prevMessageCountRef = useRef(messages.length);
+  const userScrolledUpRef = useRef(false);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'auto') => {
     const el = scrollRef.current;
-    if (!el || !isNearBottomRef.current) return;
-    el.scrollTo({ top: el.scrollHeight, behavior });
+    if (!el) return;
+    if (userScrolledUpRef.current && behavior !== 'auto') return;
+
+    // Prefer scrolling the sentinel — more reliable than scrollHeight
+    bottomRef.current?.scrollIntoView({ behavior, block: 'end' });
   }, []);
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-    isNearBottomRef.current =
-      el.scrollHeight - el.scrollTop - el.clientHeight < SCROLL_THRESHOLD;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    isNearBottomRef.current = distanceFromBottom < SCROLL_THRESHOLD;
+    userScrolledUpRef.current = distanceFromBottom > SCROLL_THRESHOLD;
   }, []);
 
-  // Smooth scroll only when a new message is added (user sent)
+  // Reset when switching chats — scroll to latest messages
   useEffect(() => {
-    if (messages.length > prevMessageCountRef.current) {
-      isNearBottomRef.current = true;
-      scrollToBottom('smooth');
-    }
-    prevMessageCountRef.current = messages.length;
-  }, [messages.length, scrollToBottom]);
+    userScrolledUpRef.current = false;
+    isNearBottomRef.current = true;
+    requestAnimationFrame(() => scrollToBottom('auto'));
+  }, [chatId, scrollToBottom]);
 
-  // Instant scroll during streaming (avoid smooth-scroll jank)
+  // Scroll when messages load or update
   useEffect(() => {
-    if (isStreaming) {
+    if (!userScrolledUpRef.current) {
+      requestAnimationFrame(() => scrollToBottom('auto'));
+    }
+  }, [messages, scrollToBottom]);
+
+  // Keep up with streaming tokens
+  useEffect(() => {
+    if (isStreaming && !userScrolledUpRef.current) {
       scrollToBottom('auto');
     }
   }, [streamingContent, isStreaming, scrollToBottom]);
 
-  // Scroll when content height changes (markdown/code blocks rendering)
+  // Content height changes (markdown, code blocks)
   useEffect(() => {
     const content = contentRef.current;
     if (!content) return;
 
     const observer = new ResizeObserver(() => {
-      if (isNearBottomRef.current) {
+      if (!userScrolledUpRef.current) {
         scrollToBottom('auto');
       }
     });
@@ -129,9 +145,13 @@ export function MessageList({ messages, streamingContent, isStreaming }: Message
     <div
       ref={scrollRef}
       onScroll={handleScroll}
-      className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-white"
+      className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-white"
     >
-      <div ref={contentRef} className="mx-auto max-w-3xl">
+      {/* min-h-full + justify-end pins short chats to bottom (ChatGPT-style) */}
+      <div
+        ref={contentRef}
+        className="mx-auto flex min-h-full max-w-3xl flex-col justify-end"
+      >
         {messages.map((msg) => (
           <MessageBubble key={msg.id} message={msg} />
         ))}
@@ -146,6 +166,7 @@ export function MessageList({ messages, streamingContent, isStreaming }: Message
             isStreaming
           />
         )}
+        <div ref={bottomRef} className="h-px shrink-0" aria-hidden />
       </div>
     </div>
   );

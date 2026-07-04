@@ -210,7 +210,7 @@ export function ChatInterface() {
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen overflow-hidden bg-white">
       <Sidebar
         onNewChat={handleNewChat}
         onSelectChat={handleSelectChat}
@@ -218,7 +218,7 @@ export function ChatInterface() {
         onSearch={handleSearch}
       />
 
-      <main className="flex min-h-0 flex-1 flex-col">
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {!activeChatId ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-white">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--surface-muted)]">
@@ -233,6 +233,7 @@ export function ChatInterface() {
           </div>
         ) : (
           <MessageList
+            chatId={activeChatId}
             messages={activeChat?.messages ?? []}
             streamingContent={streamingContent}
             isStreaming={isStreaming}
