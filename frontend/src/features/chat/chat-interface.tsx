@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useChatStore } from '@/stores/chat-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { chatService } from '@/services/api-services';
@@ -8,7 +8,8 @@ import { MessageList } from './message-list';
 import { PromptBox } from './prompt-box';
 import { Sidebar } from './sidebar';
 import { toast } from 'sonner';
-import { Sparkles } from 'lucide-react';
+import { Menu, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
@@ -34,6 +35,11 @@ export function ChatInterface() {
   const { accessToken } = useAuthStore();
   const abortRef = useRef<AbortController | null>(null);
   const activeChat = chats.find((c) => c.id === activeChatId);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // On mobile with no chat selected, show the chat list full-screen
+  const mobileShowListOnly = !activeChatId;
+  const mobileSidebarOpen = mobileShowListOnly || sidebarOpen;
 
   const loadChats = useCallback(async () => {
     try {
@@ -56,6 +62,7 @@ export function ChatInterface() {
       });
       addChat({ ...data, messages: [] });
       setActiveChat(data.id);
+      setSidebarOpen(false);
     } catch {
       toast.error('Failed to create chat');
     }
@@ -63,6 +70,7 @@ export function ChatInterface() {
 
   const handleSelectChat = async (id: string) => {
     setActiveChat(id);
+    setSidebarOpen(false);
     try {
       const { data } = await chatService.get(id);
       updateChat(id, { messages: data.messages, title: data.title });
@@ -105,6 +113,7 @@ export function ChatInterface() {
         });
         addChat({ ...data, messages: [] });
         setActiveChat(data.id);
+        setSidebarOpen(false);
         chatId = data.id;
       } catch {
         toast.error('Failed to create chat');
@@ -188,14 +197,12 @@ export function ChatInterface() {
         }
       }
 
-      // Sync full history from server (avoids stale/duplicate local state)
       const { data: freshChat } = await chatService.get(resolvedChatId);
       updateChat(resolvedChatId, {
         messages: freshChat.messages,
         title: freshChat.title,
       });
 
-      // Refresh sidebar order/titles without wiping loaded messages
       chatService.list().then(({ data }) => mergeChatList(data.chats));
     } catch (error) {
       if (error instanceof Error && error.name !== 'AbortError') {
@@ -213,17 +220,50 @@ export function ChatInterface() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white">
+    <div className="flex h-dvh overflow-hidden bg-white">
+      {/* Mobile backdrop when drawer is open over a chat */}
+      {sidebarOpen && activeChatId && (
+        <button
+          type="button"
+          aria-label="Close menu"
+          className="fixed inset-0 z-40 bg-black/20 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       <Sidebar
         onNewChat={handleNewChat}
         onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
         onSearch={handleSearch}
+        mobileOpen={mobileSidebarOpen}
+        onMobileClose={() => setSidebarOpen(false)}
+        showMobileClose={!!activeChatId && sidebarOpen}
+        mobileFullScreen={mobileShowListOnly}
       />
 
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <main
+        className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${
+          mobileShowListOnly ? 'max-md:hidden' : ''
+        }`}
+      >
+        {/* Mobile top bar */}
+        <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-white px-3 py-2 md:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open chats"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <p className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--foreground)]">
+            {activeChat?.title ?? 'Keshavai'}
+          </p>
+        </div>
+
         {!activeChatId ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-white">
+          <div className="hidden flex-1 flex-col items-center justify-center gap-4 bg-white md:flex">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--border)] bg-white">
               <Sparkles className="h-8 w-8 text-[var(--foreground)]" />
             </div>

@@ -9,6 +9,7 @@ import {
   MessageSquare,
   Settings,
   LogOut,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,10 @@ interface SidebarProps {
   onSelectChat: (id: string) => void;
   onDeleteChat: (id: string) => void;
   onSearch: (query: string) => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+  showMobileClose?: boolean;
+  mobileFullScreen?: boolean;
 }
 
 export function Sidebar({
@@ -29,6 +34,10 @@ export function Sidebar({
   onSelectChat,
   onDeleteChat,
   onSearch,
+  mobileOpen = false,
+  onMobileClose,
+  showMobileClose = false,
+  mobileFullScreen = false,
 }: SidebarProps) {
   const { chats, activeChatId } = useChatStore();
   const { user, logout } = useAuthStore();
@@ -40,16 +49,49 @@ export function Sidebar({
     onSearch(value);
   };
 
+  const handleSelect = (id: string) => {
+    onSelectChat(id);
+    onMobileClose?.();
+  };
+
+  const handleNew = () => {
+    onNewChat();
+    onMobileClose?.();
+  };
+
   const pinnedChats = chats.filter((c) => c.isPinned);
   const regularChats = chats.filter((c) => !c.isPinned);
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-[var(--border)] bg-white">
+    <aside
+      className={cn(
+        'flex h-full shrink-0 flex-col border-r border-[var(--border)] bg-white',
+        // Desktop: always visible sidebar
+        'md:relative md:z-auto md:w-64 md:translate-x-0',
+        // Mobile: drawer or full-screen list
+        'fixed inset-y-0 left-0 z-50 w-full transition-transform duration-200 ease-out md:max-w-none',
+        mobileFullScreen ? 'max-md:max-w-none' : 'max-w-[280px]',
+        mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+      )}
+    >
       <div className="flex items-center justify-between p-4">
         <h1 className="text-lg font-semibold text-[var(--foreground)]">Keshavai</h1>
-        <Button variant="ghost" size="icon" onClick={onNewChat}>
-          <Plus className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" onClick={handleNew} aria-label="New chat">
+            <Plus className="h-4 w-4" />
+          </Button>
+          {showMobileClose && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onMobileClose}
+              className="md:hidden"
+              aria-label="Close menu"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="px-3 pb-2">
@@ -82,7 +124,7 @@ export function Sidebar({
                 key={chat.id}
                 chat={chat}
                 isActive={chat.id === activeChatId}
-                onSelect={onSelectChat}
+                onSelect={handleSelect}
                 onDelete={onDeleteChat}
               />
             ))}
@@ -95,7 +137,7 @@ export function Sidebar({
               key={chat.id}
               chat={chat}
               isActive={chat.id === activeChatId}
-              onSelect={onSelectChat}
+              onSelect={handleSelect}
               onDelete={onDeleteChat}
             />
           ))}
@@ -107,17 +149,17 @@ export function Sidebar({
           <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-white text-xs font-medium text-[var(--foreground)]">
             {user?.name?.[0] ?? user?.email?.[0]?.toUpperCase() ?? 'U'}
           </div>
-          <div className="flex-1 truncate">
+          <div className="min-w-0 flex-1 truncate">
             <p className="truncate text-sm text-[var(--foreground)]">
               {user?.name ?? user?.email}
             </p>
           </div>
-          <Link href="/settings">
-            <Button variant="ghost" size="icon">
+          <Link href="/settings" onClick={() => onMobileClose?.()}>
+            <Button variant="ghost" size="icon" aria-label="Settings">
               <Settings className="h-4 w-4" />
             </Button>
           </Link>
-          <Button variant="ghost" size="icon" onClick={logout}>
+          <Button variant="ghost" size="icon" onClick={logout} aria-label="Log out">
             <LogOut className="h-4 w-4" />
           </Button>
         </div>

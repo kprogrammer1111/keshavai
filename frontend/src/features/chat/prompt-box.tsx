@@ -41,8 +41,8 @@ export function PromptBox({ onSend, onStop, isStreaming, disabled }: PromptBoxPr
   };
 
   return (
-    <div className="shrink-0 border-t border-[var(--border)] bg-white p-4">
-      <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-[var(--border)] bg-white p-2 shadow-sm">
+    <div className="shrink-0 border-t border-[var(--border)] bg-white p-2 sm:p-4">
+      <div className="mx-auto flex max-w-3xl items-end gap-1 rounded-2xl border border-[var(--border)] bg-white p-1.5 shadow-sm sm:gap-2 sm:p-2">
         <Button variant="ghost" size="icon" className="shrink-0 text-[var(--muted)]">
           <Paperclip className="h-4 w-4" />
         </Button>
@@ -81,7 +81,7 @@ export function PromptBox({ onSend, onStop, isStreaming, disabled }: PromptBoxPr
           </Button>
         )}
       </div>
-      <p className="mt-2 text-center text-xs text-[var(--muted)]">
+      <p className="mt-1 hidden text-center text-xs text-[var(--muted)] sm:mt-2 sm:block">
         Keshavai can make mistakes. Verify important information.
       </p>
     </div>
