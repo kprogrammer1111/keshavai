@@ -21,9 +21,11 @@ export function ChatInterface() {
     selectedProvider,
     selectedModel,
     setChats,
+    mergeChatList,
     setActiveChat,
     addChat,
     removeChat,
+    updateChat,
     setStreaming,
     appendStreamContent,
     resetStreamContent,
@@ -36,11 +38,11 @@ export function ChatInterface() {
   const loadChats = useCallback(async () => {
     try {
       const { data } = await chatService.list();
-      setChats(data.chats);
+      mergeChatList(data.chats);
     } catch {
       toast.error('Failed to load chats');
     }
-  }, [setChats]);
+  }, [mergeChatList]);
 
   useEffect(() => {
     loadChats();
@@ -52,7 +54,7 @@ export function ChatInterface() {
         provider: selectedProvider,
         model: selectedModel,
       });
-      addChat(data);
+      addChat({ ...data, messages: [] });
       setActiveChat(data.id);
     } catch {
       toast.error('Failed to create chat');
@@ -63,9 +65,9 @@ export function ChatInterface() {
     setActiveChat(id);
     try {
       const { data } = await chatService.get(id);
-      useChatStore.getState().updateChat(id, { messages: data.messages });
+      updateChat(id, { messages: data.messages, title: data.title });
     } catch {
-      toast.error('Failed to load chat');
+      toast.error('Failed to load chat history');
     }
   };
 
@@ -101,7 +103,7 @@ export function ChatInterface() {
           provider: selectedProvider,
           model: selectedModel,
         });
-        addChat(data);
+        addChat({ ...data, messages: [] });
         setActiveChat(data.id);
         chatId = data.id;
       } catch {
@@ -124,9 +126,12 @@ export function ChatInterface() {
       createdAt: new Date().toISOString(),
     };
 
-    const currentMessages = activeChat?.messages ?? [];
-    useChatStore.getState().updateChat(resolvedChatId, {
+    const currentMessages =
+      useChatStore.getState().chats.find((c) => c.id === resolvedChatId)?.messages ?? [];
+
+    updateChat(resolvedChatId, {
       messages: [...currentMessages, userMessage],
+      title: currentMessages.length === 0 ? content.slice(0, 50) : undefined,
     });
 
     setStreaming(true);
@@ -183,16 +188,15 @@ export function ChatInterface() {
         }
       }
 
-      const assistantMessage = {
-        id: `msg-${Date.now()}`,
-        role: 'ASSISTANT' as const,
-        content: fullContent,
-        createdAt: new Date().toISOString(),
-      };
-
-      useChatStore.getState().updateChat(resolvedChatId, {
-        messages: [...currentMessages, userMessage, assistantMessage],
+      // Sync full history from server (avoids stale/duplicate local state)
+      const { data: freshChat } = await chatService.get(resolvedChatId);
+      updateChat(resolvedChatId, {
+        messages: freshChat.messages,
+        title: freshChat.title,
       });
+
+      // Refresh sidebar order/titles without wiping loaded messages
+      chatService.list().then(({ data }) => mergeChatList(data.chats));
     } catch (error) {
       if (error instanceof Error && error.name !== 'AbortError') {
         toast.error('Failed to send message');
@@ -200,7 +204,6 @@ export function ChatInterface() {
     } finally {
       setStreaming(false);
       resetStreamContent();
-      loadChats();
     }
   };
 

@@ -27,6 +27,7 @@ interface ChatState {
   selectedProvider: string;
   selectedModel: string;
   setChats: (chats: Chat[]) => void;
+  mergeChatList: (chats: Chat[]) => void;
   setActiveChat: (id: string | null) => void;
   addChat: (chat: Chat) => void;
   updateChat: (id: string, data: Partial<Chat>) => void;
@@ -44,7 +45,36 @@ export const useChatStore = create<ChatState>((set) => ({
   streamingContent: '',
   selectedProvider: 'GEMINI',
   selectedModel: 'gemini-2.5-flash',
-  setChats: (chats) => set({ chats }),
+  setChats: (incoming) =>
+    set((s) => ({
+      chats: incoming.map((chat) => {
+        const existing = s.chats.find((c) => c.id === chat.id);
+        // Keep full history if we already loaded more than the list preview (1 msg)
+        if (
+          existing?.messages &&
+          existing.messages.length > (chat.messages?.length ?? 0)
+        ) {
+          return { ...chat, messages: existing.messages };
+        }
+        return chat;
+      }),
+    })),
+  mergeChatList: (incoming) =>
+    set((s) => {
+      const incomingIds = new Set(incoming.map((c) => c.id));
+      const preserved = s.chats.filter((c) => !incomingIds.has(c.id));
+      const merged = incoming.map((chat) => {
+        const existing = s.chats.find((c) => c.id === chat.id);
+        if (
+          existing?.messages &&
+          existing.messages.length > (chat.messages?.length ?? 0)
+        ) {
+          return { ...chat, messages: existing.messages };
+        }
+        return chat;
+      });
+      return { chats: [...merged, ...preserved] };
+    }),
   setActiveChat: (id) => set({ activeChatId: id, streamingContent: '' }),
   addChat: (chat) => set((s) => ({ chats: [chat, ...s.chats] })),
   updateChat: (id, data) =>
