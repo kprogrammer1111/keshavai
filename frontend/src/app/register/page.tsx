@@ -38,14 +38,14 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-white px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent)]">
             <Sparkles className="h-6 w-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-zinc-100">Create an account</h1>
-          <p className="mt-2 text-zinc-500">Get started with Keshavai</p>
+          <h1 className="text-2xl font-bold text-[var(--foreground)]">Create an account</h1>
+          <p className="mt-2 text-[var(--muted)]">Get started with Keshavai</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -74,9 +74,9 @@ export default function RegisterPage() {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-[var(--muted)]">
           Already have an account?{' '}
-          <Link href="/login" className="text-emerald-500 hover:underline">
+          <Link href="/login" className="text-[var(--accent)] hover:underline">
             Sign in
           </Link>
         </p>

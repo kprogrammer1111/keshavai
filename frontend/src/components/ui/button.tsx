@@ -6,15 +6,19 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        default: 'bg-emerald-600 text-white hover:bg-emerald-700',
+        default: 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]',
         destructive: 'bg-red-600 text-white hover:bg-red-700',
-        outline: 'border border-zinc-700 bg-transparent hover:bg-zinc-800',
-        ghost: 'hover:bg-zinc-800',
-        secondary: 'bg-zinc-800 text-zinc-100 hover:bg-zinc-700',
+        outline:
+          'border border-[var(--border)] bg-transparent text-[var(--foreground)] hover:bg-[var(--surface-muted)]',
+        ghost: 'text-[var(--foreground)] hover:bg-[var(--surface-muted)]',
+        secondary:
+          'bg-[var(--surface-muted)] text-[var(--foreground)] hover:bg-[var(--border)]',
+        sidebar:
+          'border border-[var(--sidebar-border)] bg-transparent text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-fg)]',
       },
       size: {
         default: 'h-10 px-4 py-2',

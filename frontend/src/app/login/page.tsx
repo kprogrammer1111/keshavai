@@ -37,14 +37,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-white px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent)]">
             <Sparkles className="h-6 w-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-zinc-100">Welcome to Keshavai</h1>
-          <p className="mt-2 text-zinc-500">Sign in to your account</p>
+          <h1 className="text-2xl font-bold text-[var(--foreground)]">Welcome to Keshavai</h1>
+          <p className="mt-2 text-[var(--muted)]">Sign in to your account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -71,9 +71,9 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-[var(--muted)]">
           Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-emerald-500 hover:underline">
+          <Link href="/register" className="text-[var(--accent)] hover:underline">
             Sign up
           </Link>
         </p>

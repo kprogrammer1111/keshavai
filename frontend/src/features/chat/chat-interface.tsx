@@ -210,7 +210,7 @@ export function ChatInterface() {
   };
 
   return (
-    <div className="flex h-screen bg-zinc-950">
+    <div className="flex h-screen bg-white">
       <Sidebar
         onNewChat={handleNewChat}
         onSelectChat={handleSelectChat}
@@ -218,16 +218,18 @@ export function ChatInterface() {
         onSearch={handleSearch}
       />
 
-      <main className="flex flex-1 flex-col">
+      <main className="flex min-h-0 flex-1 flex-col">
         {!activeChatId ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600/10">
-              <Sparkles className="h-8 w-8 text-emerald-500" />
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-white">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--surface-muted)]">
+              <Sparkles className="h-8 w-8 text-[var(--accent)]" />
             </div>
-            <h2 className="text-2xl font-semibold text-zinc-100">
+            <h2 className="text-2xl font-semibold text-[var(--foreground)]">
               How can I help you today?
             </h2>
-            <p className="text-zinc-500">Start a new conversation or select an existing chat</p>
+            <p className="text-[var(--muted)]">
+              Start a new conversation or select an existing chat
+            </p>
           </div>
         ) : (
           <MessageList

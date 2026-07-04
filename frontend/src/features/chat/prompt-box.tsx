@@ -41,9 +41,9 @@ export function PromptBox({ onSend, onStop, isStreaming, disabled }: PromptBoxPr
   };
 
   return (
-    <div className="border-t border-zinc-800 bg-zinc-950 p-4">
-      <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-zinc-700 bg-zinc-900 p-2 shadow-lg">
-        <Button variant="ghost" size="icon" className="shrink-0 text-zinc-400">
+    <div className="border-t border-[var(--border)] bg-white p-4">
+      <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-[var(--border)] bg-white p-2 shadow-md shadow-purple-100/50">
+        <Button variant="ghost" size="icon" className="shrink-0 text-[var(--muted)]">
           <Paperclip className="h-4 w-4" />
         </Button>
 
@@ -56,7 +56,7 @@ export function PromptBox({ onSend, onStop, isStreaming, disabled }: PromptBoxPr
           rows={1}
           disabled={disabled}
           className={cn(
-            'max-h-[200px] min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none',
+            'max-h-[200px] min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none',
             disabled && 'opacity-50',
           )}
         />
@@ -81,7 +81,7 @@ export function PromptBox({ onSend, onStop, isStreaming, disabled }: PromptBoxPr
           </Button>
         )}
       </div>
-      <p className="mt-2 text-center text-xs text-zinc-600">
+      <p className="mt-2 text-center text-xs text-[var(--muted)]">
         Keshavai can make mistakes. Verify important information.
       </p>
     </div>
