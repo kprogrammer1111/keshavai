@@ -9,10 +9,40 @@ interface PromptBoxProps {
   onSend: (content: string) => void;
   onStop?: () => void;
   isStreaming?: boolean;
+  streamingContent?: string;
   disabled?: boolean;
 }
 
-export function PromptBox({ onSend, onStop, isStreaming, disabled }: PromptBoxProps) {
+function TypingIndicator({ hasContent }: { hasContent: boolean }) {
+  return (
+    <div className="mx-auto mb-2 flex max-w-3xl items-center gap-2 px-1">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-white">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-neutral-400 opacity-60" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-neutral-500" />
+        </span>
+      </div>
+      <div className="flex items-center gap-2 rounded-2xl rounded-bl-sm border border-[var(--border)] bg-[var(--hover)] px-3 py-2 shadow-sm">
+        <span className="text-sm text-[var(--muted)]">
+          {hasContent ? 'Generating response' : 'Keshavai is thinking'}
+        </span>
+        <span className="flex items-center gap-1" aria-hidden>
+          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-neutral-400 [animation-delay:0ms]" />
+          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-neutral-400 [animation-delay:150ms]" />
+          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-neutral-400 [animation-delay:300ms]" />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export function PromptBox({
+  onSend,
+  onStop,
+  isStreaming,
+  streamingContent,
+  disabled,
+}: PromptBoxProps) {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -42,6 +72,9 @@ export function PromptBox({ onSend, onStop, isStreaming, disabled }: PromptBoxPr
 
   return (
     <div className="shrink-0 border-t border-[var(--border)] bg-white p-2 sm:p-4">
+      {isStreaming && (
+        <TypingIndicator hasContent={Boolean(streamingContent?.trim())} />
+      )}
       <div className="mx-auto flex max-w-3xl items-end gap-1 rounded-2xl border border-[var(--border)] bg-white p-1.5 shadow-sm sm:gap-2 sm:p-2">
         <Button variant="ghost" size="icon" className="shrink-0 text-[var(--muted)]">
           <Paperclip className="h-4 w-4" />
@@ -52,9 +85,9 @@ export function PromptBox({ onSend, onStop, isStreaming, disabled }: PromptBoxPr
           value={input}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
-          placeholder="Message Keshavai..."
+          placeholder={isStreaming ? 'Waiting for response...' : 'Message Keshavai...'}
           rows={1}
-          disabled={disabled}
+          disabled={disabled || isStreaming}
           className={cn(
             'max-h-[200px] min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none',
             disabled && 'opacity-50',
