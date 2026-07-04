@@ -180,9 +180,12 @@ export class ChatService {
     const tools = dto.useTools ? this.toolRegistry.getDefinitions() : undefined;
 
     res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
     res.flushHeaders();
+    res.write(': connected\n\n');
+    res.write(`data: ${JSON.stringify({ typing: true })}\n\n`);
 
     let fullContent = '';
     let tokenCount = 0;

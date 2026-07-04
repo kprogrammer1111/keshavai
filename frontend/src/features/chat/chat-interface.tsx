@@ -10,6 +10,7 @@ import { Sidebar } from './sidebar';
 import { toast } from 'sonner';
 import { Menu, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { createSseParser } from '@/lib/sse-parser';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
@@ -19,6 +20,7 @@ export function ChatInterface() {
     activeChatId,
     isStreaming,
     streamingContent,
+    streamStartedAt,
     selectedProvider,
     selectedModel,
     setChats,
@@ -166,35 +168,21 @@ export function ChatInterface() {
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
-      let fullContent = '';
 
       if (reader) {
+        const parseSse = createSseParser((data) => {
+          if (data.content) {
+            appendStreamContent(data.content);
+          }
+          if (data.error) toast.error(data.error);
+        });
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-
-          const text = decoder.decode(value);
-          const lines = text.split('\n');
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6)) as {
-                  content?: string;
-                  done?: boolean;
-                  error?: string;
-                };
-                if (data.content) {
-                  fullContent += data.content;
-                  appendStreamContent(data.content);
-                }
-                if (data.error) toast.error(data.error);
-              } catch {
-                // skip malformed SSE
-              }
-            }
-          }
+          parseSse.feed(decoder.decode(value, { stream: true }));
         }
+        parseSse.flush();
       }
 
       const { data: freshChat } = await chatService.get(resolvedChatId);
@@ -280,6 +268,7 @@ export function ChatInterface() {
             messages={activeChat?.messages ?? []}
             streamingContent={streamingContent}
             isStreaming={isStreaming}
+            streamStartedAt={streamStartedAt}
           />
         )}
 

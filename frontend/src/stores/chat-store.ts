@@ -24,6 +24,7 @@ interface ChatState {
   activeChatId: string | null;
   isStreaming: boolean;
   streamingContent: string;
+  streamStartedAt: number | null;
   selectedProvider: string;
   selectedModel: string;
   setChats: (chats: Chat[]) => void;
@@ -43,6 +44,7 @@ export const useChatStore = create<ChatState>((set) => ({
   activeChatId: null,
   isStreaming: false,
   streamingContent: '',
+  streamStartedAt: null,
   selectedProvider: 'GEMINI',
   selectedModel: 'gemini-2.5-flash',
   setChats: (incoming) =>
@@ -86,7 +88,11 @@ export const useChatStore = create<ChatState>((set) => ({
       chats: s.chats.filter((c) => c.id !== id),
       activeChatId: s.activeChatId === id ? null : s.activeChatId,
     })),
-  setStreaming: (isStreaming) => set({ isStreaming }),
+  setStreaming: (isStreaming) =>
+    set({
+      isStreaming,
+      streamStartedAt: isStreaming ? Date.now() : null,
+    }),
   appendStreamContent: (content) =>
     set((s) => ({ streamingContent: s.streamingContent + content })),
   resetStreamContent: () => set({ streamingContent: '' }),

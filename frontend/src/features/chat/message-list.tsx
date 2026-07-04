@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Message } from '@/stores/chat-store';
+import { useTypewriter } from '@/lib/use-typewriter';
+
+const MIN_THINKING_MS = 600;
 
 function CodeBlock({
   children,
@@ -145,12 +148,12 @@ function AssistantContent({
   );
 }
 
-function ThinkingDots() {
+function ThinkingIndicator() {
   return (
-    <div className="flex items-center gap-1 py-2">
-      <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:0ms]" />
-      <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:150ms]" />
-      <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:300ms]" />
+    <div className="flex items-center gap-1.5 py-2" aria-label="Assistant is typing">
+      <span className="h-2 w-2 animate-[typing-pulse_1.4s_ease-in-out_infinite] rounded-full bg-neutral-400" />
+      <span className="h-2 w-2 animate-[typing-pulse_1.4s_ease-in-out_0.2s_infinite] rounded-full bg-neutral-400" />
+      <span className="h-2 w-2 animate-[typing-pulse_1.4s_ease-in-out_0.4s_infinite] rounded-full bg-neutral-400" />
     </div>
   );
 }
@@ -188,16 +191,34 @@ interface MessageListProps {
   messages: Message[];
   streamingContent?: string;
   isStreaming?: boolean;
+  streamStartedAt?: number | null;
 }
 
 export function MessageList({
   chatId,
   messages,
-  streamingContent,
+  streamingContent = '',
   isStreaming,
+  streamStartedAt,
 }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const userScrolledUpRef = useRef(false);
+  const [thinkingElapsed, setThinkingElapsed] = useState(false);
+
+  const displayedStream = useTypewriter(streamingContent, !!isStreaming);
+
+  useEffect(() => {
+    if (!isStreaming) {
+      setThinkingElapsed(true);
+      return;
+    }
+
+    setThinkingElapsed(false);
+    const elapsed = streamStartedAt ? Date.now() - streamStartedAt : 0;
+    const remaining = Math.max(0, MIN_THINKING_MS - elapsed);
+    const timer = window.setTimeout(() => setThinkingElapsed(true), remaining);
+    return () => window.clearTimeout(timer);
+  }, [isStreaming, streamStartedAt, chatId]);
 
   const scrollToBottom = useCallback((force = false) => {
     const el = scrollRef.current;
@@ -220,10 +241,19 @@ export function MessageList({
 
   useEffect(() => {
     requestAnimationFrame(() => scrollToBottom(false));
-  }, [messages, streamingContent, isStreaming, scrollToBottom]);
+  }, [messages, displayedStream, isStreaming, thinkingElapsed, scrollToBottom]);
 
-  const showStreamingBubble = isStreaming && streamingContent;
-  const showThinking = isStreaming && !streamingContent;
+  const showThinking =
+    isStreaming && (!thinkingElapsed || !streamingContent);
+  const showStreamingBubble =
+    isStreaming && thinkingElapsed && displayedStream.length > 0;
+
+  const displayMessages = useMemo(() => {
+    if (!isStreaming) return messages;
+    const last = messages[messages.length - 1];
+    if (last?.role === 'ASSISTANT') return messages.slice(0, -1);
+    return messages;
+  }, [messages, isStreaming]);
 
   return (
     <div
@@ -237,12 +267,12 @@ export function MessageList({
             Ask anything to get started
           </p>
         )}
-        {messages.map((msg) => (
+        {displayMessages.map((msg) => (
           <MessageBubble key={msg.id} message={msg} />
         ))}
         {showThinking && (
           <div className="px-4 py-4">
-            <ThinkingDots />
+            <ThinkingIndicator />
           </div>
         )}
         {showStreamingBubble && (
@@ -250,7 +280,7 @@ export function MessageList({
             message={{
               id: 'streaming',
               role: 'ASSISTANT',
-              content: streamingContent,
+              content: displayedStream,
               createdAt: new Date().toISOString(),
             }}
             isStreaming
