@@ -7,12 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { authService } from '@/services/api-services';
 import { useAuthStore } from '@/stores/auth-store';
+import { useRedirectIfAuthenticated } from '@/hooks/use-auth-guard';
 import { toast } from 'sonner';
 import { Sparkles } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
+  const { hasHydrated, isAuthenticated } = useRedirectIfAuthenticated();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,6 +38,8 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+
+  if (!hasHydrated || isAuthenticated) return null;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-white px-4">

@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuthStore } from '@/stores/auth-store';
+import { useRequireAuth } from '@/hooks/use-auth-guard';
 import { userService, aiService } from '@/services/api-services';
 import { useChatStore } from '@/stores/chat-store';
 import { toast } from 'sonner';
@@ -15,22 +15,19 @@ const selectClass =
   'w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-neutral-400';
 
 export default function SettingsPage() {
-  const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
+  const { hasHydrated, isAuthenticated } = useRequireAuth();
+  const user = useAuthStore((s) => s.user);
   const { selectedProvider, selectedModel, setModel } = useChatStore();
   const [name, setName] = useState('');
   const [providers, setProviders] = useState<Array<{ name: string; models: string[] }>>([]);
   const [usage, setUsage] = useState<{ totals: { totalTokens: number | null } } | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
+    if (!hasHydrated || !isAuthenticated) return;
     setName(user?.name ?? '');
     aiService.listProviders().then(({ data }) => setProviders(data)).catch(() => {});
     userService.getUsage().then(({ data }) => setUsage(data)).catch(() => {});
-  }, [isAuthenticated, user, router]);
+  }, [hasHydrated, isAuthenticated, user]);
 
   const handleSave = async () => {
     try {
@@ -41,7 +38,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (!isAuthenticated) return null;
+  if (!hasHydrated || !isAuthenticated) return null;
 
   return (
     <div className="min-h-screen bg-white text-[var(--foreground)]">
